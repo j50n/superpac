@@ -1,15 +1,17 @@
 /**
  * SGR (Select Graphic Rendition) parameters.
- * 
+ *
  * [Ansi Escape Code Wiki: SGR](https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters)
  */
 
-import {
-  AnsiEscControlSeq,
-  ansiEscControlSeq,
-  AnsiEscSwitch,
-  range,
-} from "./common.ts";
+import { AnsiEscControlSeq, ansiEscControlSeq, range } from "./common.ts";
+
+export interface AnsiEscSwitch {
+  on: AnsiEscControlSeq;
+  off: AnsiEscControlSeq;
+}
+
+export const RESET = ansiEscControlSeq("0m");
 
 export const BOLD: AnsiEscSwitch = {
   on: ansiEscControlSeq("1m"),
@@ -80,29 +82,39 @@ export const OVERLINED: AnsiEscSwitch = {
   off: ansiEscControlSeq("55m"),
 } as const;
 
-export const COLORS = {
-  BLACK: 0,
-  RED: 1,
-  GREEN: 2,
-  YELLOW: 3,
-  BLUE: 4,
-  PURPLE: 5,
-  CYAN: 6,
-  WHITE: 7,
-} as const;
+export const BLACK = 0;
+export const RED = 1;
+export const GREEN = 2;
+export const YELLOW = 3;
+export const BLUE = 4;
+export const PURPLE = 5;
+export const CYAN = 6;
+export const WHITE = 7;
 
+/**
+ * 4-bit color.
+ *
+ * Note that these are not "true" colors, but are mapped by the
+ * terminal to colors that approximate the named color and behave
+ * well with mixed foreground and background colors.
+ */
 export const COLOR4 = {
-  fore: {
-    normal: range({ to: 8 }).map((n) => ansiEscControlSeq(`${30 + n}m`)),
-    bright: range({ to: 8 }).map((n) => ansiEscControlSeq(`${90 + n}m`)),
-    default: ansiEscControlSeq("39m"),
-  } as const,
-
-  back: {
-    normal: range({ to: 8 }).map((n) => ansiEscControlSeq(`${40 + n}m`)),
-    bright: range({ to: 8 }).map((n) => ansiEscControlSeq(`${100 + n}m`)),
-    default: ansiEscControlSeq("49m"),
-  } as const,
+  normal: range({ to: 8 }).map((n) => {
+    return {
+      fore: ansiEscControlSeq(`${30 + n}m`),
+      back: ansiEscControlSeq(`${40 + n}m`),
+    };
+  }),
+  bright: range({ to: 8 }).map((n) => {
+    return {
+      fore: ansiEscControlSeq(`${90 + n}m`),
+      back: ansiEscControlSeq(`${100 + n}m`),
+    };
+  }),
+  default: {
+    fore: ansiEscControlSeq("39m"),
+    back: ansiEscControlSeq("49m"),
+  },
 } as const;
 
 function cube(kind: "fore" | "back"): readonly AnsiEscControlSeq[][][] {
@@ -123,28 +135,39 @@ function cube(kind: "fore" | "back"): readonly AnsiEscControlSeq[][][] {
   return rR;
 }
 
+/**
+ * 8-bit color.
+ */
 export const COLOR8 = {
-  fore: {
-    standard: range({ to: 8 }).map((n) =>
-      ansiEscControlSeq(`38;5;(${0 + n})m`)
-    ),
-    high: range({ to: 8 }).map((n) => ansiEscControlSeq(`38:5:(${8 + n})m`)),
-    cube6: cube("fore"),
-    grayscale: range({ to: 24 }).map((n) =>
-      ansiEscControlSeq(`38;5;(${232 + n})m`)
-    ),
-  } as const,
+  standard: range({ to: 8 }).map((n) => {
+    return {
+      fore: ansiEscControlSeq(`38;5;(${0 + n})m`),
+      back: ansiEscControlSeq(`48;5;(${0 + n})m`),
+    };
+  }),
 
-  back: {
-    standard: range({ to: 8 }).map((n) =>
-      ansiEscControlSeq(`48;5;(${0 + n})m`)
-    ),
-    high: range({ to: 8 }).map((n) => ansiEscControlSeq(`48:5:(${8 + n})m`)),
-    cube6: cube("back"),
-    grayscale: range({ to: 24 }).map((n) =>
-      ansiEscControlSeq(`48;5;(${232 + n})m`)
-    ),
-  } as const,
+  high: range({ to: 8 }).map((n) => {
+    return {
+      fore: ansiEscControlSeq(`38:5:(${8 + n})m`),
+      back: ansiEscControlSeq(`48:5:(${8 + n})m`),
+    };
+  }),
+
+  /**
+   * A 6x6x6 cube (216 colors) of color (indexed: `[red][green][blue]`, _0..5_ each);
+   * `[0][0][0]` is black; `[5][5][5]` is white; `[5][0][0]` is fully-saturated red.
+   */
+  cube6: {
+    fore: cube("fore"),
+    back: cube("back"),
+  },
+
+  grayscale: range({ to: 24 }).map((n) => {
+    return {
+      fore: ansiEscControlSeq(`38;5;(${232 + n})m`),
+      back: ansiEscControlSeq(`48;5;(${232 + n})m`),
+    };
+  }),
 };
 
 function check(axis: number, label: string) {
@@ -157,29 +180,39 @@ function check(axis: number, label: string) {
   }
 }
 
-function color24fore(options: { r: number; g: number; b: number }) {
+/**
+ * 24-bit color.
+ *
+ * Unlike other color types, this is generated on-demand rather than being
+ * reused. This can result in a lot of small objects being created, which could
+ * affect performance. Caller should take steps to reuse if possible.
+ *
+ * @param options Options.
+ * @returns Foreground and background colors.
+ */
+export function COLOR24(options: {
+  /** Red, 0..255. */
+  r: number;
+  /** Green, 0..255. */
+  g: number;
+  /** Blue, 0..255. */
+  b: number;
+}) {
   check(options.r, "RED");
   check(options.g, "GREEN");
   check(options.b, "BLUE");
 
-  return new AnsiEscControlSeq(
-    `38;2;(${options.r});(${options.g});(${options.b})m`,
-    0x01000000 + options.r * 65536 + options.g * 256 + options.b,
-  );
+  const partid = options.r * 65536 + options.g * 256 + options.b;
+  const subcmd = `2;(${options.r});(${options.g});(${options.b})m`;
+
+  return {
+    fore: new AnsiEscControlSeq(
+      `38;${subcmd}`,
+      0x01000000 + partid,
+    ),
+    back: new AnsiEscControlSeq(
+      `48;${subcmd}`,
+      0x02000000 + partid,
+    ),
+  };
 }
-
-function color24back(options: { r: number; g: number; b: number }) {
-  check(options.r, "RED");
-  check(options.g, "GREEN");
-  check(options.b, "BLUE");
-
-  return new AnsiEscControlSeq(
-    `48;2;(${options.r});(${options.g});(${options.b})m`,
-    0x02000000 + options.r * 65536 + options.g * 256 + options.b,
-  );
-}
-
-export const COLOR24 = {
-  fore: color24fore,
-  back: color24back,
-} as const;

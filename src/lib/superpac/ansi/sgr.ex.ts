@@ -1,7 +1,7 @@
 import {
+  BLUE,
   BOLD,
   COLOR4,
-  COLORS,
   CONCEAL,
   ENCIRCLED,
   FAINT,
@@ -11,6 +11,7 @@ import {
   ITALIC,
   OVERLINED,
   RAPID_BLINK,
+  RED,
   SLOW_BLINK,
   STRIKE,
   UNDERLINE,
@@ -48,8 +49,8 @@ if (import.meta.main) {
   );
 
   console.log(
-    `COLOR:   ${COLOR4.fore.normal[COLORS.RED].txt}${
-      COLOR4.back.bright[COLORS.BLUE].txt
-    }Red-on-Blue${COLOR4.back.default.txt}${COLOR4.fore.default.txt}`,
+    `COLOR:   ${COLOR4.normal[RED].fore.txt}${
+      COLOR4.bright[BLUE].back.txt
+    }Red-on-Blue${COLOR4.default.back.txt}${COLOR4.default.fore.txt}`,
   );
 }

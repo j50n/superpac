@@ -41,10 +41,5 @@ export function ansiEscControlSeq(seq: string): AnsiEscControlSeq {
   return new AnsiEscControlSeq(seq, uid++);
 }
 
-export interface AnsiEscSwitch {
-  on: AnsiEscControlSeq;
-  off: AnsiEscControlSeq;
-}
-
 export const CR = charSeq("\r");
 export const LF = charSeq("\n");
