@@ -4,7 +4,7 @@
  * [Ansi Escape Code Wiki: SGR](https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters)
  */
 
-import { AnsiEscControlSeq, ansiEscControlSeq, range } from "./common.ts";
+import { AnsiEscControlSeq, ansiEscControlSeq, nextUid, range } from "./common.ts";
 
 export interface AnsiEscSwitch {
   on: AnsiEscControlSeq;
@@ -82,6 +82,18 @@ export const OVERLINED: AnsiEscSwitch = {
   off: ansiEscControlSeq("55m"),
 } as const;
 
+export class BackColor extends AnsiEscControlSeq{}
+export class ForeColor extends AnsiEscControlSeq{}
+
+function foreColor(seq: string, uid?: number){
+  return new ForeColor(seq, uid ?? nextUid())
+}
+
+function backColor(seq: string, uid?: number){
+  return new BackColor(seq, uid ?? nextUid())
+}
+
+
 export const BLACK = 0;
 export const RED = 1;
 export const GREEN = 2;
@@ -101,23 +113,23 @@ export const WHITE = 7;
 export const COLOR4 = {
   normal: range({ to: 8 }).map((n) => {
     return {
-      fore: ansiEscControlSeq(`${30 + n}m`),
-      back: ansiEscControlSeq(`${40 + n}m`),
+      fore: foreColor(`${30 + n}m`),
+      back: backColor(`${40 + n}m`),
     };
   }),
   bright: range({ to: 8 }).map((n) => {
     return {
-      fore: ansiEscControlSeq(`${90 + n}m`),
-      back: ansiEscControlSeq(`${100 + n}m`),
+      fore: foreColor(`${90 + n}m`),
+      back: backColor(`${100 + n}m`),
     };
   }),
   default: {
-    fore: ansiEscControlSeq("39m"),
-    back: ansiEscControlSeq("49m"),
+    fore: foreColor("39m"),
+    back: backColor("49m"),
   },
 } as const;
 
-function cube(kind: "fore" | "back"): readonly AnsiEscControlSeq[][][] {
+function cube<T extends "fore"|"back">(kind: T): readonly (typeof kind extends "fore" ? ForeColor : BackColor)[][][] {
   const code = kind === "fore" ? "38" : "48";
 
   const rR: AnsiEscControlSeq[][][] = [];
@@ -128,7 +140,8 @@ function cube(kind: "fore" | "back"): readonly AnsiEscControlSeq[][][] {
       const rB: AnsiEscControlSeq[] = [];
       rG.push(rB);
       for (const b of range({ to: 6 })) {
-        rB.push(ansiEscControlSeq(`${code};5;(${16 + 36 * r + 6 * g + b})m`));
+        const seq = `${code};5;(${16 + 36 * r + 6 * g + b})m`
+        rB.push(kind === "fore"? foreColor(seq): backColor(seq))
       }
     }
   }
@@ -141,15 +154,15 @@ function cube(kind: "fore" | "back"): readonly AnsiEscControlSeq[][][] {
 export const COLOR8 = {
   standard: range({ to: 8 }).map((n) => {
     return {
-      fore: ansiEscControlSeq(`38;5;(${0 + n})m`),
-      back: ansiEscControlSeq(`48;5;(${0 + n})m`),
+      fore: foreColor(`38;5;(${0 + n})m`),
+      back: backColor(`48;5;(${0 + n})m`),
     };
   }),
 
   high: range({ to: 8 }).map((n) => {
     return {
-      fore: ansiEscControlSeq(`38:5:(${8 + n})m`),
-      back: ansiEscControlSeq(`48:5:(${8 + n})m`),
+      fore: foreColor(`38:5:(${8 + n})m`),
+      back: backColor(`48:5:(${8 + n})m`),
     };
   }),
 
@@ -164,8 +177,8 @@ export const COLOR8 = {
 
   grayscale: range({ to: 24 }).map((n) => {
     return {
-      fore: ansiEscControlSeq(`38;5;(${232 + n})m`),
-      back: ansiEscControlSeq(`48;5;(${232 + n})m`),
+      fore: foreColor(`38;5;(${232 + n})m`),
+      back: backColor(`48;5;(${232 + n})m`),
     };
   }),
 };
@@ -206,11 +219,11 @@ export function COLOR24(options: {
   const subcmd = `2;(${options.r});(${options.g});(${options.b})m`;
 
   return {
-    fore: new AnsiEscControlSeq(
+    fore: foreColor(
       `38;${subcmd}`,
       0x01000000 + partid,
     ),
-    back: new AnsiEscControlSeq(
+    back: backColor(
       `48;${subcmd}`,
       0x02000000 + partid,
     ),
