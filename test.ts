@@ -10,13 +10,10 @@ ctx.fillRect(4, 2, 8, 4);
 ctx.fillStyle = "green"; //"rgba(0,0,255,0.5)";
 ctx.fillRect(6, 3, 8, 4);
 
-//ctx.
 
-// const id = ctx.getImageData(0, 0, 20, 10);
-// console.dir(id.height);
-// console.dir(id.width);
 
-const data = canvas.getRawBuffer(0,0,20,10)
+const data = ctx.getImageData(0, 0, 20, 10).data;
+// const data = canvas.getRawBuffer(0,0,20,10)
 
 // for(const d of data){
 //   console.log(d)
