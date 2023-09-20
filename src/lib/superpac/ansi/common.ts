@@ -2,17 +2,16 @@ const ESCAPE = "\x1B";
 
 interface WindowExt extends Window {
   superpac?: {
-    uid: number
-  }
+    uid: number;
+  };
 }
 export function nextUid() {
   const w = window as WindowExt;
-  if(w.superpac ==null){
-    w.superpac = {uid: 0}
+  if (w.superpac == null) {
+    w.superpac = { uid: 0 };
   }
 
-  console.log(w.superpac.uid)
-  return w.superpac.uid++
+  return w.superpac.uid++;
 }
 
 export function range(options: { from?: number; to: number }): number[] {
@@ -30,7 +29,7 @@ export class CharSeq {
   /**
    * Constructor.
    * @param seq The character sequence.
-   * @param uid The identifier. This is guaranteed to be unique for 
+   * @param uid The identifier. This is guaranteed to be unique for
    *     character sequences that are exactly equivalent, so it is
    *     useful for a fast equality check. Nothing else should be
    *     inferred from the value.
@@ -42,14 +41,14 @@ export class CharSeq {
 }
 
 /**
- * Initialize a {@link CharSeq}. Sequences created this way are 
+ * Initialize a {@link CharSeq}. Sequences created this way are
  * assumed to be interned.
- * 
+ *
  * @param seq The character sequence.
  * @returns The {@link CharSeq} instance.
  */
 export function charSeq(seq: string, uid?: number) {
-  return new CharSeq(seq, uid ?? nextUid());
+  return new CharSeq(seq, uid || nextUid());
 }
 
 /**
@@ -66,17 +65,20 @@ export class AnsiEscControlSeq extends CharSeq {
 }
 
 /**
- * Initialize a {@link AnsiEscControlSeq}. Sequences created this way are 
+ * Initialize a {@link AnsiEscControlSeq}. Sequences created this way are
  * assumed to be interned.
- * 
+ *
  * @param seq The control sequence.
  * @returns The {@link AnsiEscControlSeq} instance.
  */
-export function ansiEscControlSeq(seq: string, uid?: number): AnsiEscControlSeq {
-  return new AnsiEscControlSeq(seq, uid ?? nextUid());
+export function ansiEscControlSeq(
+  seq: string,
+  uid?: number,
+): AnsiEscControlSeq {
+  return new AnsiEscControlSeq(seq, uid || nextUid());
 }
 
 export const CR = charSeq("\r");
 export const LF = charSeq("\n");
 
-export const SPACE = charSeq(" ")
+export const SPACE = charSeq(" ");

@@ -4,7 +4,12 @@
  * [Ansi Escape Code Wiki: SGR](https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters)
  */
 
-import { AnsiEscControlSeq, ansiEscControlSeq, nextUid, range } from "./common.ts";
+import {
+  AnsiEscControlSeq,
+  ansiEscControlSeq,
+  nextUid,
+  range,
+} from "./common.ts";
 
 export interface AnsiEscSwitch {
   on: AnsiEscControlSeq;
@@ -82,17 +87,16 @@ export const OVERLINED: AnsiEscSwitch = {
   off: ansiEscControlSeq("55m"),
 } as const;
 
-export class BackColor extends AnsiEscControlSeq{}
-export class ForeColor extends AnsiEscControlSeq{}
+export class BackColor extends AnsiEscControlSeq {}
+export class ForeColor extends AnsiEscControlSeq {}
 
-function foreColor(seq: string, uid?: number){
-  return new ForeColor(seq, uid ?? nextUid())
+function foreColor(seq: string, uid?: number) {
+  return new ForeColor(seq, uid || nextUid());
 }
 
-function backColor(seq: string, uid?: number){
-  return new BackColor(seq, uid ?? nextUid())
+function backColor(seq: string, uid?: number) {
+  return new BackColor(seq, uid || nextUid());
 }
-
 
 export const BLACK = 0;
 export const RED = 1;
@@ -129,7 +133,9 @@ export const COLOR4 = {
   },
 } as const;
 
-function cube<T extends "fore"|"back">(kind: T): readonly (typeof kind extends "fore" ? ForeColor : BackColor)[][][] {
+function cube<T extends "fore" | "back">(
+  kind: T,
+): readonly (typeof kind extends "fore" ? ForeColor : BackColor)[][][] {
   const code = kind === "fore" ? "38" : "48";
 
   const rR: AnsiEscControlSeq[][][] = [];
@@ -140,8 +146,8 @@ function cube<T extends "fore"|"back">(kind: T): readonly (typeof kind extends "
       const rB: AnsiEscControlSeq[] = [];
       rG.push(rB);
       for (const b of range({ to: 6 })) {
-        const seq = `${code};5;(${16 + 36 * r + 6 * g + b})m`
-        rB.push(kind === "fore"? foreColor(seq): backColor(seq))
+        const seq = `${code};5;(${16 + 36 * r + 6 * g + b})m`;
+        rB.push(kind === "fore" ? foreColor(seq) : backColor(seq));
       }
     }
   }
@@ -216,7 +222,9 @@ export function COLOR24(options: {
   check(options.b, "BLUE");
 
   const partid = options.r * 65536 + options.g * 256 + options.b;
-  const subcmd = `2;(${options.r});(${options.g});(${options.b})m`;
+ // const subcmd = `2;(${options.r});(${options.g});(${options.b})m`;
+  const subcmd = `2;${options.r};${options.g};${options.b}m`;
+
 
   return {
     fore: foreColor(

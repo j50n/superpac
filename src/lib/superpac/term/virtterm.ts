@@ -15,13 +15,16 @@ export const STRIKE = 0x0080;
 export const DOUBLE_WIDTH = 0x8000;
 
 export class VirtTerm {
-  /** 
-   * Each character is stored as UTF-8 bytes, allowing unlimited diacriticals. 
-   * Also, if the character is a double-wide, this must be flagged in the style. 
+  /**
+   * Each character is stored as UTF-8 bytes, allowing unlimited diacriticals.
+   * Also, if the character is a double-wide, this must be flagged in the style.
    */
   readonly char: Uint8Array[];
+  /** Background color. */
   readonly back: BackColor[];
+  /** Foreground color. */
   readonly fore: ForeColor[];
+  /** Bit-wise styles. */
   readonly style: Uint16Array;
 
   constructor(public readonly size: { columns: number; rows: number }) {
@@ -37,21 +40,21 @@ export class VirtTerm {
   }
 
   indexOf(row: number, column: number): number {
-    /* Quick-force integer since we are using multiplication for the index. */
-    const r = row << 0;
-    const c = column << 0;
-
-    if (r < 0 || r >= this.size.rows) {
-      throw new RangeError(`invalid row [0..${this.size.rows - 1}]: ${r}`);
+    function err(message: string): never {
+      throw new RangeError(message);
     }
 
-    if (c < 0 || c >= this.size.columns) {
-      throw new RangeError(
-        `invalid column [0..${this.size.columns - 1}]: ${c}`,
-      );
+    if (!Number.isInteger(row)) {
+      err(`row is not an integer: ${row}`);
+    } else if (!Number.isInteger(column)) {
+      err(`column is not an integer: ${column}`);
+    } else if (row < 0 || row >= this.size.rows) {
+      err(`invalid row [0..${this.size.rows - 1}]: ${row}`);
+    } else if (column < 0 || column >= this.size.columns) {
+      err(`invalid column [0..${this.size.columns - 1}]: ${column}`);
+    } else {
+      return row * this.size.columns + column;
     }
-
-    return r * this.size.columns + c;
   }
 }
 
