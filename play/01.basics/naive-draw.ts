@@ -33,7 +33,7 @@ for (let y = 0; y < 10; y++) {
     } else {
       row.push(COLOR24({ r, g, b }).fore.txt);
       row.push("█");
-      row.push(RESET);
+      row.push(RESET.txt);
     }
   }
   row.push(RESET.txt);
