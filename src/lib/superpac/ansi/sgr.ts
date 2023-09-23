@@ -104,6 +104,7 @@ export const GREEN = 2;
 export const YELLOW = 3;
 export const BLUE = 4;
 export const PURPLE = 5;
+export const VIOLET = PURPLE;
 export const CYAN = 6;
 export const WHITE = 7;
 
@@ -222,7 +223,6 @@ export function COLOR24(options: {
   check(options.b, "BLUE");
 
   const partid = options.r * 65536 + options.g * 256 + options.b;
- // const subcmd = `2;(${options.r});(${options.g});(${options.b})m`;
   const subcmd = `2;${options.r};${options.g};${options.b}m`;
 
 
