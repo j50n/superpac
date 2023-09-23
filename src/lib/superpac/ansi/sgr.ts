@@ -225,7 +225,6 @@ export function COLOR24(options: {
   const partid = options.r * 65536 + options.g * 256 + options.b;
   const subcmd = `2;${options.r};${options.g};${options.b}m`;
 
-
   return {
     fore: foreColor(
       `38;${subcmd}`,
