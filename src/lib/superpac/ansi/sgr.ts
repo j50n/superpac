@@ -16,6 +16,14 @@ export interface AnsiEscSwitch {
   off: AnsiEscControlSeq;
 }
 
+export function pick(sw: number, aes: AnsiEscSwitch): AnsiEscControlSeq {
+  if (sw !== 0) {
+    return aes.on;
+  } else {
+    return aes.off;
+  }
+}
+
 export const RESET = ansiEscControlSeq("0m");
 
 export const BOLD: AnsiEscSwitch = {
