@@ -142,21 +142,17 @@ export const COLOR4 = {
   },
 } as const;
 
-function cube<T extends "fore" | "back">(
-  kind: T,
-): readonly (typeof kind extends "fore" ? ForeColor : BackColor)[][][] {
-  const code = kind === "fore" ? "38" : "48";
-
-  const rR: AnsiEscControlSeq[][][] = [];
+function cube<T extends "fore" | "back">(): readonly {fore: ForeColor, back: BackColor}[][][] {
+  const rR: {fore: ForeColor, back: BackColor}[][][] = [];
   for (const r of range({ to: 6 })) {
-    const rG: AnsiEscControlSeq[][] = [];
+    const rG: {fore: ForeColor, back: BackColor}[][] = [];
     rR.push(rG);
     for (const g of range({ to: 6 })) {
-      const rB: AnsiEscControlSeq[] = [];
+      const rB: {fore: ForeColor, back: BackColor}[] = [];
       rG.push(rB);
       for (const b of range({ to: 6 })) {
-        const seq = `${code};5;(${16 + 36 * r + 6 * g + b})m`;
-        rB.push(kind === "fore" ? foreColor(seq) : backColor(seq));
+        const seq = (code: number) => `${code};5;(${16 + 36 * r + 6 * g + b})m`;
+        rB.push({fore : foreColor(seq(38)), back:  backColor(seq(48))});
       }
     }
   }
@@ -185,10 +181,7 @@ export const COLOR8 = {
    * A 6x6x6 cube (216 colors) of color (indexed: `[red][green][blue]`, _0..5_ each);
    * `[0][0][0]` is black; `[5][5][5]` is white; `[5][0][0]` is fully-saturated red.
    */
-  cube6: {
-    fore: cube("fore"),
-    back: cube("back"),
-  },
+  cube6: cube(),
 
   grayscale: range({ to: 24 }).map((n) => {
     return {
@@ -198,13 +191,34 @@ export const COLOR8 = {
   }),
 };
 
-function check(axis: number, label: string) {
-  if (!Number.isInteger(axis)) {
-    throw new RangeError(`${label} must be an integer: ${axis}`);
-  } else if (axis < 0) {
-    throw new RangeError(`${label} must be 0 or greater: ${axis}`);
-  } else if (axis > 255) {
-    throw new RangeError(`${label} must be 255 or less: ${axis}`);
+const colorMap6 = Array(256).map((_, i) => Math.floor(i * (6/256))) 
+
+export function mapRGBToCube6(r: number, g: number, b: number): {fore: ForeColor, back: BackColor}{
+  return COLOR8.cube6[colorMap6[r]][colorMap6[g]][colorMap6[b]]
+}
+
+
+
+/** NTSC grayscale formula, red. */
+const gsRED = 0.299
+
+/** NTSC grayscale formula, green. */
+const gsGREEN =0.587
+
+/** NTSC grayscale formula, blue. */
+const gsBLUE = 0.114
+
+export function mapRGBToGrayscale8(r: number, g: number, b: number): {fore: ForeColor, back: BackColor} {
+  const sr = gsRED * r
+  const sg = gsGREEN * g
+  const sb = gsBLUE * b
+
+  return COLOR8.grayscale[Math.floor((24/256)* (sr + sg + sb))]
+}
+
+function checkRange8Bit(axis: number, label: string) {
+  if(colorMap6[axis] === undefined){
+    throw new RangeError(`${label} must be an integer in range 0..255: ${axis}`)
   }
 }
 
@@ -226,9 +240,9 @@ export function COLOR24(options: {
   /** Blue, 0..255. */
   b: number;
 }) {
-  check(options.r, "RED");
-  check(options.g, "GREEN");
-  check(options.b, "BLUE");
+  checkRange8Bit(options.r, "RED");
+  checkRange8Bit(options.g, "GREEN");
+  checkRange8Bit(options.b, "BLUE");
 
   const partid = options.r * 65536 + options.g * 256 + options.b;
   const subcmd = `2;${options.r};${options.g};${options.b}m`;
@@ -243,4 +257,18 @@ export function COLOR24(options: {
       0x02000000 + partid,
     ),
   };
+}
+
+const grayscale24Colors = Array(256).map((_,i) => COLOR24({r: i, g: i, b: i}))
+
+/**
+ * Grayscale with 256 levels in the 24-bit color space.
+ * @param r Red, 0..255.
+ * @param g Green, 0..255.
+ * @param b Blue, 0..255.
+ * @returns The equivalent grayscale with 256 levels.
+ */
+export function mapRGBToGrayscale24(r: number, g: number, b: number): {fore: ForeColor, back: BackColor} {
+  const color = Math.floor(gsRED * r + gsGREEN * g + gsBLUE * b)
+  return grayscale24Colors[color]
 }
