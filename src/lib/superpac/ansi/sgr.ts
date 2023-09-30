@@ -106,13 +106,14 @@ function backColor(seq: string, uid?: number) {
   return new BackColor(seq, uid || nextUid());
 }
 
+export type ColorDef = { fore: ForeColor; back: BackColor };
+
 export const BLACK = 0;
 export const RED = 1;
 export const GREEN = 2;
 export const YELLOW = 3;
 export const BLUE = 4;
 export const PURPLE = 5;
-export const VIOLET = PURPLE;
 export const CYAN = 6;
 export const WHITE = 7;
 
@@ -142,17 +143,17 @@ export const COLOR4 = {
   },
 } as const;
 
-function cube<T extends "fore" | "back">(): readonly {fore: ForeColor, back: BackColor}[][][] {
-  const rR: {fore: ForeColor, back: BackColor}[][][] = [];
+function cube<T extends "fore" | "back">(): readonly ColorDef[][][] {
+  const rR: ColorDef[][][] = [];
   for (const r of range({ to: 6 })) {
-    const rG: {fore: ForeColor, back: BackColor}[][] = [];
+    const rG: ColorDef[][] = [];
     rR.push(rG);
     for (const g of range({ to: 6 })) {
-      const rB: {fore: ForeColor, back: BackColor}[] = [];
+      const rB: ColorDef[] = [];
       rG.push(rB);
       for (const b of range({ to: 6 })) {
         const seq = (code: number) => `${code};5;(${16 + 36 * r + 6 * g + b})m`;
-        rB.push({fore : foreColor(seq(38)), back:  backColor(seq(48))});
+        rB.push({ fore: foreColor(seq(38)), back: backColor(seq(48)) });
       }
     }
   }
@@ -191,34 +192,42 @@ export const COLOR8 = {
   }),
 };
 
-const colorMap6 = Array(256).map((_, i) => Math.floor(i * (6/256))) 
+const colorMap6 = Array(256).map((_, i) => Math.floor(i * (6 / 256)));
 
-export function mapRGBToCube6(r: number, g: number, b: number): {fore: ForeColor, back: BackColor}{
-  return COLOR8.cube6[colorMap6[r]][colorMap6[g]][colorMap6[b]]
+export function mapRGBToCube6(
+  r: number,
+  g: number,
+  b: number,
+): ColorDef {
+  return COLOR8.cube6[colorMap6[r]][colorMap6[g]][colorMap6[b]];
 }
 
-
-
 /** NTSC grayscale formula, red. */
-const gsRED = 0.299
+const gsRED = 0.299;
 
 /** NTSC grayscale formula, green. */
-const gsGREEN =0.587
+const gsGREEN = 0.587;
 
 /** NTSC grayscale formula, blue. */
-const gsBLUE = 0.114
+const gsBLUE = 0.114;
 
-export function mapRGBToGrayscale8(r: number, g: number, b: number): {fore: ForeColor, back: BackColor} {
-  const sr = gsRED * r
-  const sg = gsGREEN * g
-  const sb = gsBLUE * b
+export function mapRGBToGrayscale8(
+  r: number,
+  g: number,
+  b: number,
+): ColorDef {
+  const sr = gsRED * r;
+  const sg = gsGREEN * g;
+  const sb = gsBLUE * b;
 
-  return COLOR8.grayscale[Math.floor((24/256)* (sr + sg + sb))]
+  return COLOR8.grayscale[Math.floor((24 / 256) * (sr + sg + sb))];
 }
 
 function checkRange8Bit(axis: number, label: string) {
-  if(colorMap6[axis] === undefined){
-    throw new RangeError(`${label} must be an integer in range 0..255: ${axis}`)
+  if (colorMap6[axis] === undefined) {
+    throw new RangeError(
+      `${label} must be an integer in range 0..255: ${axis}`,
+    );
   }
 }
 
@@ -239,7 +248,7 @@ export function COLOR24(options: {
   g: number;
   /** Blue, 0..255. */
   b: number;
-}) {
+}): ColorDef {
   checkRange8Bit(options.r, "RED");
   checkRange8Bit(options.g, "GREEN");
   checkRange8Bit(options.b, "BLUE");
@@ -259,7 +268,9 @@ export function COLOR24(options: {
   };
 }
 
-const grayscale24Colors = Array(256).map((_,i) => COLOR24({r: i, g: i, b: i}))
+const grayscale24Colors = Array(256).map((_, i) =>
+  COLOR24({ r: i, g: i, b: i })
+);
 
 /**
  * Grayscale with 256 levels in the 24-bit color space.
@@ -268,7 +279,11 @@ const grayscale24Colors = Array(256).map((_,i) => COLOR24({r: i, g: i, b: i}))
  * @param b Blue, 0..255.
  * @returns The equivalent grayscale with 256 levels.
  */
-export function mapRGBToGrayscale24(r: number, g: number, b: number): {fore: ForeColor, back: BackColor} {
-  const color = Math.floor(gsRED * r + gsGREEN * g + gsBLUE * b)
-  return grayscale24Colors[color]
+export function mapRGBToGrayscale24(
+  r: number,
+  g: number,
+  b: number,
+): ColorDef {
+  const color = Math.floor(gsRED * r + gsGREEN * g + gsBLUE * b);
+  return grayscale24Colors[color];
 }

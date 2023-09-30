@@ -1,6 +1,6 @@
 import { assert } from "https://deno.land/std@0.201.0/assert/assert.ts";
-import {concat} from "https://deno.land/x/proc@0.20.43/mod3.ts"
-import { CR, CharSeq, SPACE } from "../ansi/common.ts";
+import { concat } from "https://deno.land/x/proc@0.20.43/mod3.ts";
+import { CharSeq, CR, SPACE } from "../ansi/common.ts";
 import { BackColor, COLOR4, ForeColor, pick } from "../ansi/sgr.ts";
 import * as sgr from "../ansi/sgr.ts";
 
@@ -31,7 +31,10 @@ export class VirtTerm {
 
   readonly size: Readonly<ReturnType<typeof Deno.consoleSize>>;
 
-  constructor(size: ReturnType<typeof Deno.consoleSize>, options?:{char?: CharSeq, fore?: ForeColor, back: BackColor}) {
+  constructor(
+    size: ReturnType<typeof Deno.consoleSize>,
+    options?: { char?: CharSeq; fore?: ForeColor; back: BackColor },
+  ) {
     this.size = size;
 
     assert(Number.isInteger(size.columns));
@@ -72,15 +75,15 @@ export class VirtTerm {
       4 * this.size.rows * this.size.columns,
     );
 
-    result[0] = sgr.RESET.bin 
+    result[0] = sgr.RESET.bin;
     let iResult = 1;
 
     let row = 0;
 
     while (row < this.size.rows) {
-      if(row !== 0){
-        result[iResult] = CR.bin
-        iResult += 1
+      if (row !== 0) {
+        result[iResult] = CR.bin;
+        iResult += 1;
       }
 
       let col = 0;
@@ -169,13 +172,13 @@ export class VirtTerm {
             col += 2;
           }
         }
-        iResult += 1
+        iResult += 1;
       }
 
       row += 1;
     }
 
-    return concat(result.slice(0, iResult))
+    return concat(result.slice(0, iResult));
   }
 }
 
