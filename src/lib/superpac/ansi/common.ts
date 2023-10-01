@@ -82,3 +82,4 @@ export const CR = charSeq("\r");
 export const LF = charSeq("\n");
 
 export const SPACE = charSeq(" ");
+export const LOW_HALFBLOCK = charSeq("▄")

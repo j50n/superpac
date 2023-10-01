@@ -1,7 +1,7 @@
 import { assert } from "https://deno.land/std@0.201.0/assert/assert.ts";
 import { concat } from "https://deno.land/x/proc@0.20.43/mod3.ts";
-import { CharSeq, CR, SPACE } from "../ansi/common.ts";
-import { BackColor, COLOR4, ForeColor, pick } from "../ansi/sgr.ts";
+import { CharSeq, CR, LF, SPACE } from "../ansi/common.ts";
+import { BackColor, COLOR4, ForeColor, pick, RESET } from "../ansi/sgr.ts";
 import * as sgr from "../ansi/sgr.ts";
 
 export const BOLD = 0x0001;
@@ -33,7 +33,7 @@ export class VirtTerm {
 
   constructor(
     size: ReturnType<typeof Deno.consoleSize>,
-    options?: { char?: CharSeq; fore?: ForeColor; back: BackColor },
+    options?: { char?: CharSeq; fore?: ForeColor; back?: BackColor },
   ) {
     this.size = size;
 
@@ -67,13 +67,12 @@ export class VirtTerm {
   }
 
   render() {
-    let lastBackColor = -1;
-    let lastForeColor = -1;
-    let lastStyle = 0;
+    
+    
 
     const result: Uint8Array[] = new Array(
       4 * this.size.rows * this.size.columns,
-    );
+    ).fill(null);
 
     result[0] = sgr.RESET.bin;
     let iResult = 1;
@@ -81,10 +80,19 @@ export class VirtTerm {
     let row = 0;
 
     while (row < this.size.rows) {
+      
+
       if (row !== 0) {
-        result[iResult] = CR.bin;
-        iResult += 1;
+        result[iResult ] = RESET.bin
+         iResult += 1
+        result[iResult] = LF.bin;
+        iResult += 1
+        
       }
+
+      let lastStyle = 0;
+      let lastBackColor = -1;
+      let lastForeColor = -1;
 
       let col = 0;
       while (col < this.size.columns) {
@@ -160,6 +168,7 @@ export class VirtTerm {
         if ((this.style[iTerm] & DOUBLE_WIDTH) === 0) {
           /* Single width character. */
           result[iResult] = this.char[iTerm];
+          console.log(`CHAR ${this.char[iTerm]}`)
           col += 1;
         } else {
           if (col === this.size.columns - 1) {
@@ -178,6 +187,8 @@ export class VirtTerm {
       row += 1;
     }
 
+    console.dir(result)
+    console.log(iResult)
     return concat(result.slice(0, iResult));
   }
 }

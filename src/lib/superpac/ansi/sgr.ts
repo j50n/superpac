@@ -82,7 +82,7 @@ export const FONT: readonly AnsiEscControlSeq[] = range({ to: 11 })
 
 export const FRAMED: AnsiEscSwitch = {
   on: ansiEscControlSeq("51m"),
-  off: ansiEscControlSeq("54m"),
+  off: ansiEscControlSeq("54m"), 
 } as const;
 
 export const ENCIRCLED: AnsiEscSwitch = {
@@ -152,7 +152,7 @@ function cube<T extends "fore" | "back">(): readonly ColorDef[][][] {
       const rB: ColorDef[] = [];
       rG.push(rB);
       for (const b of range({ to: 6 })) {
-        const seq = (code: number) => `${code};5;(${16 + 36 * r + 6 * g + b})m`;
+        const seq = (code: number) => `${code};5;${16 + 36 * r + 6 * g + b}m`;
         rB.push({ fore: foreColor(seq(38)), back: backColor(seq(48)) });
       }
     }
@@ -166,15 +166,15 @@ function cube<T extends "fore" | "back">(): readonly ColorDef[][][] {
 export const COLOR8 = {
   standard: range({ to: 8 }).map((n) => {
     return {
-      fore: foreColor(`38;5;(${0 + n})m`),
-      back: backColor(`48;5;(${0 + n})m`),
+      fore: foreColor(`38;5;${0 + n}m`),
+      back: backColor(`48;5;${0 + n}m`),
     };
   }),
 
   high: range({ to: 8 }).map((n) => {
     return {
-      fore: foreColor(`38:5:(${8 + n})m`),
-      back: backColor(`48:5:(${8 + n})m`),
+      fore: foreColor(`38:5:${8 + n}m`),
+      back: backColor(`48:5:${8 + n}m`),
     };
   }),
 
@@ -186,13 +186,13 @@ export const COLOR8 = {
 
   grayscale: range({ to: 24 }).map((n) => {
     return {
-      fore: foreColor(`38;5;(${232 + n})m`),
-      back: backColor(`48;5;(${232 + n})m`),
+      fore: foreColor(`38;5;${232 + n}m`),
+      back: backColor(`48;5;${232 + n}m`),
     };
   }),
 };
 
-const colorMap6 = Array(256).map((_, i) => Math.floor(i * (6 / 256)));
+const colorMap6 = Array(256).fill(null).map((_, i) => Math.floor(i * (6 / 256)));
 
 export function mapRGBToCube6(
   r: number,
@@ -224,7 +224,7 @@ export function mapRGBToGrayscale8(
 }
 
 function checkRange8Bit(axis: number, label: string) {
-  if (colorMap6[axis] === undefined) {
+  if (colorMap6[axis] == null) {
     throw new RangeError(
       `${label} must be an integer in range 0..255: ${axis}`,
     );
@@ -268,7 +268,7 @@ export function COLOR24(options: {
   };
 }
 
-const grayscale24Colors = Array(256).map((_, i) =>
+const grayscale24Colors = Array(256).fill(null).map((_, i) =>
   COLOR24({ r: i, g: i, b: i })
 );
 

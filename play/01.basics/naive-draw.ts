@@ -1,5 +1,8 @@
 import { createCanvas } from "https://deno.land/x/canvas@v1.4.1/mod.ts";
-import { COLOR24, RESET } from "../../src/lib/superpac/ansi/sgr.ts";
+import { BLACK, COLOR24, COLOR4, COLOR8, GREEN, RED, RESET, WHITE } from "../../src/lib/superpac/ansi/sgr.ts";
+import { VirtTerm } from "../../src/lib/superpac/term/virtterm.ts";
+import { LOW_HALFBLOCK } from "../../src/lib/superpac/ansi/common.ts";
+import { blit } from "../../src/lib/superpac/halfblock/halfblock-blit.ts";
 
 const canvas = createCanvas(20, 10);
 const ctx = canvas.getContext("2d");
@@ -55,3 +58,19 @@ for (let y = 0; y < 10; y++) {
   row.push(RESET.txt);
   console.log(`  ${row.join("")}`);
 }
+
+const term = new VirtTerm({columns: 40, rows: 20}, {char: LOW_HALFBLOCK, fore: COLOR8.cube6[0][0][0].fore, back: COLOR8.cube6[0][0][0].back })
+
+blit(ctx.getImageData(0, 0, 20, 10), term)
+
+term.fore[term.indexOf(0,0)] = COLOR4.normal[RED].fore
+term.back[term.indexOf(0,0)] = COLOR4.normal[GREEN].back
+
+console.log()
+await Deno.stdout.write(term.render())
+console.log(RESET.txt)
+
+console.log(`RESET is ${RESET.bin}`)
+
+console.log(`RED FORE   ${COLOR4.normal[RED].fore.bin}`)
+console.log(`GREEN-BACK ${COLOR4.normal[GREEN].back.bin}`)
